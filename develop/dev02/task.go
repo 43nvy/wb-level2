@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	"strconv"
+)
+
 /*
 === Задача на распаковку ===
 
@@ -18,6 +23,53 @@ package main
 Функция должна проходить все тесты. Код должен проходить проверки go vet и golint.
 */
 
-func main() {
+// Unpack выполняет распаковку строки и возвращает результат и ошибку.
+func Unpack(str string) (string, error) {
+	// Рассматриваем краевой случай, при котором на вход поступила пустая строка
+	if len(str) == 0 {
+		return "", nil
+	}
+	// Преобразуем строку в слайс рун
+	runes := []rune(str)
+	// Предотвращаем дальнейшие аллокации, рассматривая краевой случай,
+	// где после каждого символа стоит 9, поэтому ставим capacity в длину строки * 10
+	result := make([]rune, 0, len(runes)*10)
 
+	for index, char := range runes {
+		// Проверяем руну на число
+		if isDigit(char) {
+			// Рассматривае случаи некорректных строк, по заданию
+			if index == 0 {
+				return "", fmt.Errorf("uncorrect string: %s", str)
+			} else if isDigit(runes[index-1]) {
+				return "", fmt.Errorf("uncorrect string: %s", str)
+			} else if char == '1' {
+				// Если число 1 - нам ничего делать не нужно
+				continue
+			} else {
+				// Преобразуем руну в число
+				number, err := strconv.Atoi(string(char))
+				if err != nil {
+					return "", err
+				}
+				// В цикле, добавляем предыдущую, перед числом, руну на нужное количество раз
+				// number - 1 потому, что руну-символ мы уже добавили
+				for i := 0; i < number-1; i++ {
+					result = append(result, runes[index-1])
+				}
+				// Переходим к следующей итерации, чтобы не добавлять число в результирующую строку
+				continue
+			}
+
+		}
+		// Если не число - добавляем в результат
+		result = append(result, char)
+	}
+	// Преобразовываем слайс рун в строку и возвращаем, с ошибкой = nil
+	return string(result), nil
+}
+
+// isDigit функция, для проверки символа на цифру
+func isDigit(char rune) bool {
+	return char >= '0' && char <= '9'
 }
